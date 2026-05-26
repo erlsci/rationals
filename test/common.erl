@@ -16,17 +16,16 @@
 -include_lib("common_test/include/ct.hrl").
 
 -export([
-	 all/0,
-	 groups/1,
-	 tests/1
-	]).
+    all/0,
+    groups/1,
+    tests/1
+]).
 
 all() ->
     [{group, main}].
 
 groups(Module) ->
     [{main, [parallel], common:tests(Module)}].
-
 
 tests(Module) ->
     [Function || {Function, Arity} <- Module:module_info(exports), Arity == 1, is_a_test(Function)].

@@ -17,7 +17,6 @@
 
 -compile(export_all).
 
-
 all() ->
     common:all().
 
@@ -60,7 +59,7 @@ is_greater_than_test(_Config) ->
     false = rationals:is_greater_than(A, A),
     true = rationals:is_greater_or_equal(A, A).
 
-is_equal_to_test(_Config) ->    
+is_equal_to_test(_Config) ->
     A = rationals:new(3, 4),
     B = rationals:new(2, 4),
     C = rationals:new(1, 2),
@@ -78,14 +77,13 @@ is_less_than_test(_Config) ->
     true = rationals:is_less_or_equal(B, A),
     true = rationals:is_less_than(B, A).
 
-
 subtraction_test(_Config) ->
     A = rationals:new(2, 3),
     B = rationals:new(1, 2),
     Difference = rationals:subtract(A, B),
     1 = rationals:numerator(Difference),
     6 = rationals:denominator(Difference).
-    
+
 mixed_numbers_test(_Config) ->
     A = rationals:new(6),
     B = rationals:new(3, 4),

@@ -13,16 +13,15 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-{application, rationals,
- [
-  {description, "Rational numbers in Erlang"},
-  {vsn, "0.2.0"},
-  {modules, []},
-  {registered, []},
-  {applications, [kernel,stdlib]},
-  {env, []},
+{application, rationals, [
+    {description, "Rational numbers in Erlang"},
+    {vsn, "0.2.0"},
+    {modules, []},
+    {registered, []},
+    {applications, [kernel, stdlib]},
+    {env, []},
 
-  {licenses, ["Apache 2.0"]},
-  {links, []},
-  {files, ["rebar.config", "README*", "LICENSE*", "src", "test"]}
- ]}.
+    {licenses, ["Apache 2.0"]},
+    {links, []},
+    {files, ["rebar.config", "README*", "LICENSE*", "src", "test"]}
+]}.
