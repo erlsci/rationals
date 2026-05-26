@@ -36,7 +36,9 @@
     compare_test/1,
     gt_lt_eq_test/1,
     gte_lte_test/1,
-    reduce_test/1
+    reduce_test/1,
+    ratio_test/1,
+    to_float_test/1
 ]).
 
 all() ->
@@ -184,3 +186,11 @@ reduce_test(_Config) ->
     Half = rationals:new(1, 2),
     1 = rationals:numerator(rationals:reduce(Half)),
     2 = rationals:denominator(rationals:reduce(Half)).
+
+ratio_test(_Config) ->
+    A = rationals:new(3, 4),
+    {3, 4} = rationals:ratio(A).
+
+to_float_test(_Config) ->
+    A = rationals:new(1, 4),
+    0.25 = rationals:to_float(A).
