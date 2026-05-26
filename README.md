@@ -11,10 +11,10 @@
 ## Build & Test
 
 ``` shell
-$ rebar3 compile
-$ rebar3 check
+rebar3 compile
+rebar3 check
 ```
-    
+
 ## Usage
 
 ``` erlang
@@ -51,14 +51,13 @@ Copyright © 2021, Erlang-Aided Enrichment Center
 
 Copyright © 2014 Peter Morgan <peter.james.morgan@gmail.com>
 
-
 [//]: ---Named-Links---
 
 [logo]: priv/images/logo.png
 [logo-large]: priv/images/logo-large.png
-[gh-actions-badge]: https://github.com/erlsci/rationals/workflows/ci%2Fcd/badge.svg
+[gh-actions-badge]: https://github.com/erlsci/rationals/workflows/ci/badge.svg
 [gh-actions]: https://github.com/erlsci/rationals/actions
 [erlang-badge]: https://img.shields.io/badge/erlang-19%20to%2023-blue.svg
-[versions]: https://github.com/erlsci/rationals/blob/master/.github/workflows/cicd.yml
+[versions]: https://github.com/erlsci/rationals/blob/master/.github/workflows/ci.yml
 [github-tag]: https://github.com/erlsci/rationals/tags
 [github-tag-badge]: https://img.shields.io/github/tag/erlsci/rationals.svg
