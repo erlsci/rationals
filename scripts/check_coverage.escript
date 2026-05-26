@@ -1,15 +1,15 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! -pa _build/test/lib/iso8601/ebin
+%%! -pa _build/test/lib/rationals/ebin
 
--define(THRESHOLD, 95).
+-define(THRESHOLD, 100).
 -define(COVERDATA_FILES, [
     "_build/test/cover/eunit.coverdata",
     "_build/test/cover/ct.coverdata",
     "_build/test/cover/proper.coverdata"
 ]).
 -define(MODULES, [
-    iso8601
+    rationals
 ]).
 
 -define(AMENDED, #{}).

@@ -89,7 +89,7 @@ help:
 	@echo "  make console        - Start Erlang shell with app loaded"
 	@echo "  make check          - Run all checks (xref, dialyzer, lint, tests)"
 	@echo "  make analyze        - Run static analysis (xref, dialyzer, lint)"
-	@echo "  make coverage       - Run tests and assert >=95% executable-line coverage"
+	@echo "  make coverage       - Run tests and assert >=100% executable-line coverage"
 	@echo "  make docs           - Generate documentation (ex_doc)"
 	@echo "  make coverage-report - Generate coverage report"
 	@echo "  make publish        - Publish to Hex"

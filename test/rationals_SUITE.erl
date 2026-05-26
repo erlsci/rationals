@@ -15,7 +15,25 @@
 -module(rationals_SUITE).
 -include_lib("common_test/include/ct.hrl").
 
--compile(export_all).
+-export([
+    all/0,
+    groups/0,
+    adding_quarters_to_thirds_test/1,
+    adding_three_quarters_to_five_twelves_test/1,
+    multiply_two_thirds_by_three_quarters_test/1,
+    simplify_test/1,
+    is_greater_than_test/1,
+    is_equal_to_test/1,
+    is_less_than_test/1,
+    subtraction_test/1,
+    mixed_numbers_test/1,
+    reciprocal_test/1,
+    divide_test/1,
+    six_from_float_test/1,
+    point_seven_five_from_float_test/1,
+    point_five_from_float_test/1,
+    greatest_common_divisor_test/1
+]).
 
 all() ->
     common:all().
