@@ -32,7 +32,11 @@
     six_from_float_test/1,
     point_seven_five_from_float_test/1,
     point_five_from_float_test/1,
-    greatest_common_divisor_test/1
+    greatest_common_divisor_test/1,
+    compare_test/1,
+    gt_lt_eq_test/1,
+    gte_lte_test/1,
+    reduce_test/1
 ]).
 
 all() ->
@@ -139,3 +143,44 @@ point_five_from_float_test(_Config) ->
 
 greatest_common_divisor_test(_Config) ->
     6 = rationals:gcd(48, 18).
+
+compare_test(_Config) ->
+    A = rationals:new(3, 4),
+    B = rationals:new(2, 4),
+    C = rationals:new(1, 2),
+    gt = rationals:compare(A, B),
+    lt = rationals:compare(B, A),
+    eq = rationals:compare(B, C),
+    eq = rationals:compare(A, A).
+
+gt_lt_eq_test(_Config) ->
+    A = rationals:new(3, 4),
+    B = rationals:new(2, 4),
+    true = rationals:gt(A, B),
+    false = rationals:gt(B, A),
+    false = rationals:gt(A, A),
+    true = rationals:lt(B, A),
+    false = rationals:lt(A, B),
+    false = rationals:lt(A, A),
+    true = rationals:eq(A, A),
+    true = rationals:eq(rationals:new(2, 4), rationals:new(1, 2)),
+    false = rationals:eq(A, B).
+
+gte_lte_test(_Config) ->
+    A = rationals:new(3, 4),
+    B = rationals:new(2, 4),
+    true = rationals:gte(A, B),
+    true = rationals:gte(A, A),
+    false = rationals:gte(B, A),
+    true = rationals:lte(B, A),
+    true = rationals:lte(A, A),
+    false = rationals:lte(A, B).
+
+reduce_test(_Config) ->
+    A = rationals:new(63, 462),
+    R = rationals:reduce(A),
+    3 = rationals:numerator(R),
+    22 = rationals:denominator(R),
+    Half = rationals:new(1, 2),
+    1 = rationals:numerator(rationals:reduce(Half)),
+    2 = rationals:denominator(rationals:reduce(Half)).
