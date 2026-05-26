@@ -23,6 +23,7 @@
     multiply/2,
     divide/2,
     reciprocal/1,
+    normalize/1,
     reduce/1,
     numerator/1,
     denominator/1,
@@ -32,6 +33,8 @@
     eq/2,
     gte/2,
     lte/2,
+    zero/0,
+    one/0,
     from_float/1,
     to_float/1,
     gcd/2,
@@ -58,8 +61,8 @@
 -type denominator() :: pos_integer().
 
 -record(fraction, {
-    numerator :: numerator(),
-    denominator :: denominator()
+    numerator :: integer(),
+    denominator :: integer()
 }).
 
 -type ratio() :: {numerator(), denominator()}.
@@ -115,23 +118,22 @@ reciprocal(#fraction{numerator = Numerator, denominator = Denominator}) ->
 divide(A, B) ->
     multiply(A, reciprocal(B)).
 
--spec reduce(fraction()) -> fraction().
-reduce(#fraction{numerator = Numerator, denominator = Denominator} = F) ->
-    case gcd(Numerator, Denominator) of
-        1 ->
-            F;
-        GCD ->
-            new(Numerator div GCD, Denominator div GCD)
+-spec normalize(fraction()) -> fraction().
+normalize(#fraction{numerator = N, denominator = D}) when D =/= 0 ->
+    G = gcd(erlang:abs(N), erlang:abs(D)),
+    case D < 0 of
+        true -> new(-(N div G), -(D div G));
+        false -> new(N div G, D div G)
     end.
 
-%% The total order on rationals: compares two fractions by value and returns
-%% lt, eq, or gt. All of the comparison predicates below derive from this.
-%% Assumes positive denominators (the denominator() contract).
+-spec reduce(fraction()) -> fraction().
+reduce(F) ->
+    normalize(F).
+
 -spec compare(fraction(), fraction()) -> lt | eq | gt.
-compare(
-    #fraction{numerator = N1, denominator = D1},
-    #fraction{numerator = N2, denominator = D2}
-) ->
+compare(F1, F2) ->
+    #fraction{numerator = N1, denominator = D1} = normalize(F1),
+    #fraction{numerator = N2, denominator = D2} = normalize(F2),
     compare_cross(N1 * D2, N2 * D1).
 
 compare_cross(Left, Right) when Left < Right -> lt;
@@ -157,6 +159,12 @@ gte(F1, F2) ->
 -spec lte(fraction(), fraction()) -> boolean().
 lte(F1, F2) ->
     compare(F1, F2) =/= gt.
+
+-spec zero() -> fraction().
+zero() -> new(0, 1).
+
+-spec one() -> fraction().
+one() -> new(1, 1).
 
 -spec to_float(fraction()) -> float().
 to_float(#fraction{

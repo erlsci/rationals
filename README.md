@@ -39,34 +39,56 @@ rebar3 check
 {fraction,1,12}
 ```
 
-Arithmetic returns unreduced fractions; call `reduce/1` for lowest terms:
+Arithmetic returns unreduced fractions; call `reduce/1` (or `normalize/1`) for
+canonical form — reduced to lowest terms with the sign on the numerator and a
+positive denominator:
 
 ``` erlang
 7> Sum = rationals:add(rationals:new(3, 4), rationals:new(5, 12)).
 {fraction,56,48}
 8> rationals:reduce(Sum).
 {fraction,7,6}
+9> rationals:normalize(rationals:new(1, -2)).
+{fraction,-1,2}
+```
+
+The constants `zero/0` and `one/0` return canonical `0/1` and `1/1`:
+
+``` erlang
+10> rationals:zero().
+{fraction,0,1}
+11> rationals:one().
+{fraction,1,1}
 ```
 
 Compare fractions by value with `compare/2` (which returns `lt`, `eq`, or `gt`) or with the boolean predicates `gt/2`, `lt/2`, `eq/2`, `gte/2`, and `lte/2`:
 
 ``` erlang
-9> rationals:compare(Quarter, Third).
+12> rationals:compare(Quarter, Third).
 lt
-10> rationals:gt(Third, Quarter).
+13> rationals:gt(Third, Quarter).
 true
-11> rationals:eq(rationals:new(2, 4), rationals:new(1, 2)).
+14> rationals:eq(rationals:new(2, 4), rationals:new(1, 2)).
 true
 ```
 
 ``` erlang
-12> rationals:gcd(64, 72).
+15> rationals:gcd(64, 72).
 8
 ```
 
 The original long-form names — `simplify/1`, `is_greater_than/2`, `is_less_than/2`, `is_equal_to/2`, `is_greater_or_equal/2`, and `is_less_or_equal/2` — remain available as backward-compatible aliases, but the short names above are preferred.
 
 See more examples in [test/rationals_SUITE.erl](https://github.com/erlsci/rationals/blob/master/test/rationals_SUITE.erl); see [rationals.erl](https://github.com/erlsci/rationals/blob/main/src/rationals.erl) for implementation details.
+
+### Behavior change in 0.3.0: negative-denominator canonicalization
+
+`reduce/1` (and its alias `simplify/1`) now canonicalize sign: the denominator
+is always positive in the result and the sign is carried on the numerator.
+Previously, `reduce(new(1, -2))` returned `1/-2`; it now returns `-1/2`.
+`compare/2` and all derived predicates are now sign-robust — they normalize
+operands internally, so comparisons are correct even on fractions with a
+negative denominator.
 
 ## License
 

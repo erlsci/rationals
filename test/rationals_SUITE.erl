@@ -38,7 +38,12 @@
     gte_lte_test/1,
     reduce_test/1,
     ratio_test/1,
-    to_float_test/1
+    to_float_test/1,
+    normalize_test/1,
+    normalize_zero_denominator_test/1,
+    reduce_canonical_sign_test/1,
+    compare_sign_robust_test/1,
+    constants_test/1
 ]).
 
 all() ->
@@ -194,3 +199,33 @@ ratio_test(_Config) ->
 to_float_test(_Config) ->
     A = rationals:new(1, 4),
     0.25 = rationals:to_float(A).
+
+normalize_test(_Config) ->
+    {-1, 2} = rationals:ratio(rationals:normalize(rationals:new(1, -2))),
+    {3, 4} = rationals:ratio(rationals:normalize(rationals:new(-3, -4))),
+    {-1, 2} = rationals:ratio(rationals:normalize(rationals:new(2, -4))),
+    {-3, 4} = rationals:ratio(rationals:normalize(rationals:new(-6, 8))),
+    {0, 1} = rationals:ratio(rationals:normalize(rationals:new(0, -5))),
+    {2, 1} = rationals:ratio(rationals:normalize(rationals:new(6, 3))),
+    {3, 4} = rationals:ratio(rationals:normalize(rationals:new(3, 4))).
+
+normalize_zero_denominator_test(_Config) ->
+    try rationals:normalize(rationals:new(1, 0)) of
+        _ -> error(should_have_crashed)
+    catch
+        error:function_clause -> ok
+    end.
+
+reduce_canonical_sign_test(_Config) ->
+    {-1, 2} = rationals:ratio(rationals:reduce(rationals:new(1, -2))).
+
+compare_sign_robust_test(_Config) ->
+    lt = rationals:compare(rationals:new(1, -2), rationals:new(1, 3)),
+    eq = rationals:compare(rationals:new(1, -2), rationals:new(-1, 2)).
+
+constants_test(_Config) ->
+    {0, 1} = rationals:ratio(rationals:zero()),
+    {1, 1} = rationals:ratio(rationals:one()),
+    F = rationals:new(3, 4),
+    eq = rationals:compare(rationals:add(F, rationals:zero()), F),
+    eq = rationals:compare(rationals:multiply(F, rationals:one()), F).
