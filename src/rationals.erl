@@ -58,11 +58,14 @@
 ]).
 
 -type numerator() :: integer().
+%% The canonical (post-normalize) contract: always positive after reduce/normalize.
 -type denominator() :: pos_integer().
+%% Representation: lazy new/2 may store any non-zero integer before normalization.
+-type raw_denominator() :: integer().
 
 -record(fraction, {
-    numerator :: integer(),
-    denominator :: integer()
+    numerator :: numerator(),
+    denominator :: raw_denominator()
 }).
 
 -type ratio() :: {numerator(), denominator()}.
@@ -81,6 +84,8 @@ new(Numerator, Denominator) ->
 numerator(#fraction{numerator = Numerator}) ->
     Numerator.
 
+%% Canonical-form guarantee: returns pos_integer() after normalize/reduce.
+%% A fraction built lazily with new/2 may carry a negative denominator.
 -spec denominator(fraction()) -> denominator().
 denominator(#fraction{denominator = Denominator}) ->
     Denominator.

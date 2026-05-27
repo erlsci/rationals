@@ -43,7 +43,8 @@
     normalize_zero_denominator_test/1,
     reduce_canonical_sign_test/1,
     compare_sign_robust_test/1,
-    constants_test/1
+    constants_test/1,
+    denominator_contract_boundary_test/1
 ]).
 
 all() ->
@@ -229,3 +230,9 @@ constants_test(_Config) ->
     F = rationals:new(3, 4),
     eq = rationals:compare(rationals:add(F, rationals:zero()), F),
     eq = rationals:compare(rationals:multiply(F, rationals:one()), F).
+
+denominator_contract_boundary_test(_Config) ->
+    Lazy = rationals:new(1, -2),
+    Normalized = rationals:normalize(Lazy),
+    {1, -2} = rationals:ratio(Lazy),
+    {-1, 2} = rationals:ratio(Normalized).
