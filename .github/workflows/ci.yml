@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main, 'release/**', 'task/**', 'feature/**', 'epic/**']
 
+# CI calls the same `make` targets a developer runs locally, so `make check`
+# and CI exercise identical commands — no "passes locally, fails in CI" surprises.
+# The matrix jobs run the build/test gate across the OTP support range; a single
+# `lint` job runs the dev-profile style tools (which need a modern OTP).
+
 jobs:
 
   older-builds:
@@ -15,6 +20,7 @@ jobs:
     # GitHub retired the ubuntu-20.04 hosted runner (2025-04-15) and old OTP has
     # no precompiled builds for current runners, so the old tier runs inside the
     # official Debian-based erlang images (OTP baked in) rather than via setup-beam.
+    # These images are buildpack-deps-based, so `make` is already present.
     container:
       image: erlang:${{ matrix.otp_version }}
 
@@ -42,24 +48,19 @@ jobs:
         chmod +x /usr/local/bin/rebar3
     - name: Check rebar3 Version
       run: rebar3 --version
+    # Static checks run on every OTP in the range. Tests + coverage need PropEr
+    # 1.5 (OTP floor 21.3) and run common_test, so they're gated to OTP >= 21.
+    # `make coverage` runs eunit + ct + proper and asserts 100% on the production
+    # module via scripts/check_coverage.escript.
     - name: Compile
-      run: rebar3 compile
-    - name: Xref Checks
-      run: rebar3 xref
+      run: make compile
+    - name: Xref
+      run: make xref
     - name: Dialyzer
-      run: rebar3 dialyzer
-    # eunit/proper/coverage run in the `test` profile, which pulls PropEr 1.5
-    # (OTP floor 21.3), so they're gated to OTP >= 21. OTP 20 still gets
-    # compile + xref + dialyzer (default profile, no PropEr, no dev plugins).
-    - name: EUnit Tests
+      run: make dialyzer
+    - name: Tests + coverage
       if: matrix.otp_version >= 21
-      run: rebar3 eunit -c -v
-    - name: PropEr Tests
-      if: matrix.otp_version >= 21
-      run: rebar3 proper -c
-    - name: Test Coverage
-      if: matrix.otp_version >= 21
-      run: rebar3 as test cover -v --min_coverage=100
+      run: make coverage
 
   newer-builds:
     name: Erlang ${{ matrix.otp_version }} build
@@ -79,14 +80,28 @@ jobs:
     - name: Check rebar3 Version
       run: rebar3 --version
     - name: Compile
-      run: rebar3 compile
-    - name: Xref Checks
-      run: rebar3 xref
+      run: make compile
+    - name: Xref
+      run: make xref
     - name: Dialyzer
-      run: rebar3 dialyzer
-    - name: EUnit Tests
-      run: rebar3 eunit -c -v
-    - name: PropEr Tests
-      run: rebar3 proper -c
-    - name: Test Coverage
-      run: rebar3 as test cover -v --min_coverage=100
+      run: make dialyzer
+    - name: Tests + coverage
+      run: make coverage
+
+  lint:
+    name: Format & lint
+    runs-on: ubuntu-22.04
+    # erlfmt and rebar3_lint live in the `dev` rebar3 profile and need a modern
+    # OTP, so the style gate runs once here rather than across the matrix.
+    steps:
+    - uses: actions/checkout@v6
+    - uses: erlef/setup-beam@v1
+      with:
+        otp-version: '27'
+        rebar3-version: '3.25'
+    - name: Check rebar3 Version
+      run: rebar3 --version
+    - name: Format check
+      run: make format-check
+    - name: Lint (elvis)
+      run: make lint
