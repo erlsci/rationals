@@ -61,7 +61,12 @@
     to_mixed_test/1,
     from_mixed_test/1,
     is_integer_test/1,
-    is_proper_test/1
+    is_proper_test/1,
+    parse_test/1,
+    parse_error_test/1,
+    format_test/1,
+    from_integer_test/1,
+    round_trip_test/1
 ]).
 
 all() ->
@@ -394,3 +399,37 @@ is_proper_test(_Config) ->
     true = rationals:is_proper(rationals:new(-3, 4)),
     false = rationals:is_proper(rationals:new(5, 5)),
     true = rationals:is_proper(rationals:new(0, 5)).
+
+parse_test(_Config) ->
+    {ok, F1} = rationals:parse("3/4"),
+    eq = rationals:compare(F1, rationals:new(3, 4)),
+    {ok, F2} = rationals:parse("3"),
+    eq = rationals:compare(F2, rationals:new(3, 1)),
+    {ok, F3} = rationals:parse("-3/4"),
+    eq = rationals:compare(F3, rationals:new(-3, 4)),
+    {ok, F4} = rationals:parse(<<"3/4">>),
+    eq = rationals:compare(F4, rationals:new(3, 4)),
+    {ok, F5} = rationals:parse("  3 / 4  "),
+    eq = rationals:compare(F5, rationals:new(3, 4)).
+
+parse_error_test(_Config) ->
+    {error, zero_denominator} = rationals:parse("3/0"),
+    {error, invalid} = rationals:parse("x"),
+    {error, invalid} = rationals:parse("3/"),
+    {error, invalid} = rationals:parse("/4"),
+    {error, invalid} = rationals:parse("3/4/5"),
+    {error, invalid} = rationals:parse("").
+
+format_test(_Config) ->
+    <<"3/4">> = rationals:format(rationals:new(3, 4)),
+    <<"3">> = rationals:format(rationals:new(3, 1)),
+    <<"-3/4">> = rationals:format(rationals:new(-3, 4)),
+    <<"0">> = rationals:format(rationals:zero()).
+
+from_integer_test(_Config) ->
+    {5, 1} = rationals:ratio(rationals:from_integer(5)),
+    true = rationals:is_integer(rationals:from_integer(5)).
+
+round_trip_test(_Config) ->
+    {ok, G} = rationals:parse(rationals:format(rationals:new(7, 12))),
+    eq = rationals:compare(G, rationals:new(7, 12)).

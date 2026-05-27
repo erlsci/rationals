@@ -59,6 +59,9 @@
     from_mixed/3,
     is_integer/1,
     is_proper/1,
+    from_integer/1,
+    format/1,
+    parse/1,
     from_float/1,
     to_float/1,
     gcd/2,
@@ -320,6 +323,45 @@ is_integer(F) ->
 is_proper(F) ->
     #fraction{numerator = N, denominator = D} = normalize(F),
     erlang:abs(N) < D.
+
+-spec from_integer(integer()) -> fraction().
+from_integer(N) ->
+    new(N, 1).
+
+-spec format(fraction()) -> binary().
+format(F) ->
+    case ratio(F) of
+        {N, 1} ->
+            integer_to_binary(N);
+        {N, D} ->
+            <<(integer_to_binary(N))/binary, $/, (integer_to_binary(D))/binary>>
+    end.
+
+-spec parse(string() | binary()) -> {ok, fraction()} | {error, invalid | zero_denominator}.
+parse(Bin) when is_binary(Bin) ->
+    parse(binary_to_list(Bin));
+parse(Str) when is_list(Str) ->
+    case string:split(string:trim(Str), "/", all) of
+        [NumStr] ->
+            case to_int(NumStr) of
+                {ok, N} -> {ok, new(N, 1)};
+                error -> {error, invalid}
+            end;
+        [NumStr, DenStr] ->
+            case {to_int(NumStr), to_int(DenStr)} of
+                {{ok, _}, {ok, 0}} -> {error, zero_denominator};
+                {{ok, N}, {ok, D}} -> {ok, new(N, D)};
+                _ -> {error, invalid}
+            end;
+        _ ->
+            {error, invalid}
+    end.
+
+to_int(Str) ->
+    case string:to_integer(string:trim(Str)) of
+        {Int, []} -> {ok, Int};
+        _ -> error
+    end.
 
 -spec to_float(fraction()) -> float().
 to_float(#fraction{

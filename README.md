@@ -123,6 +123,25 @@ true
 true
 ```
 
+Parse fractions from text and format them as binaries:
+
+``` erlang
+30> rationals:parse("3/4").
+{ok,{fraction,3,4}}
+31> rationals:parse("-7/3").
+{ok,{fraction,-7,3}}
+32> rationals:parse("42").
+{ok,{fraction,42,1}}
+33> rationals:parse("3/0").
+{error,zero_denominator}
+34> rationals:format(rationals:new(7, 12)).
+<<"7/12">>
+35> rationals:format(rationals:new(3, 1)).
+<<"3">>
+36> rationals:from_integer(5).
+{fraction,5,1}
+```
+
 Also available: `min/2`, `max/2`, `clamp/3`, `between/3`, `dist/2`,
 `is_zero/1`, `is_positive/1`, `is_negative/1`.
 

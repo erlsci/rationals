@@ -35,7 +35,11 @@
     prop_to_mixed_round_trip/0,
     prop_to_mixed_proper/0,
     prop_is_integer_consistent/0,
-    prop_is_proper_consistent/0
+    prop_is_proper_consistent/0,
+    prop_parse_format_round_trip/0,
+    prop_from_integer_is_integer/0,
+    prop_parse_integer_string/0,
+    prop_parse_zero_denominator/0
 ]).
 
 %%% Generators
@@ -406,4 +410,41 @@ prop_is_proper_consistent() ->
         fraction(),
         rationals:is_proper(F) =:=
             (rationals:compare(rationals:abs(F), rationals:one()) =:= lt)
+    ).
+
+%%% Phase 3 properties
+
+prop_parse_format_round_trip() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            {ok, G} = rationals:parse(rationals:format(F)),
+            same_value(G, F)
+        end
+    ).
+
+prop_from_integer_is_integer() ->
+    ?FORALL(
+        N,
+        integer(),
+        rationals:is_integer(rationals:from_integer(N)) andalso
+            same_value(rationals:from_integer(N), rationals:new(N, 1))
+    ).
+
+prop_parse_integer_string() ->
+    ?FORALL(
+        N,
+        integer(),
+        begin
+            {ok, G} = rationals:parse(integer_to_list(N)),
+            same_value(G, rationals:from_integer(N))
+        end
+    ).
+
+prop_parse_zero_denominator() ->
+    ?FORALL(
+        N,
+        integer(),
+        rationals:parse(integer_to_list(N) ++ "/0") =:= {error, zero_denominator}
     ).
