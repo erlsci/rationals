@@ -62,6 +62,14 @@
     from_integer/1,
     format/1,
     parse/1,
+    mediant/2,
+    is_reduced/1,
+    is_unit_fraction/1,
+    lcm/2,
+    continued_fraction/1,
+    from_continued_fraction/1,
+    convergents/1,
+    rationalize/2,
     from_float/1,
     to_float/1,
     gcd/2,
@@ -361,6 +369,96 @@ to_int(Str) ->
     case string:to_integer(string:trim(Str)) of
         {Int, []} -> {ok, Int};
         _ -> error
+    end.
+
+-spec mediant(fraction(), fraction()) -> fraction().
+mediant(F1, F2) ->
+    #fraction{numerator = N1, denominator = D1} = normalize(F1),
+    #fraction{numerator = N2, denominator = D2} = normalize(F2),
+    new(N1 + N2, D1 + D2).
+
+-spec is_reduced(fraction()) -> boolean().
+is_reduced(#fraction{numerator = N, denominator = D}) ->
+    gcd(erlang:abs(N), erlang:abs(D)) =:= 1.
+
+-spec is_unit_fraction(fraction()) -> boolean().
+is_unit_fraction(F) ->
+    case normalize(F) of
+        #fraction{numerator = 1} -> true;
+        _ -> false
+    end.
+
+-spec lcm(integer(), integer()) -> non_neg_integer().
+lcm(0, _) -> 0;
+lcm(_, 0) -> 0;
+lcm(A, B) -> erlang:abs(A * B) div gcd(erlang:abs(A), erlang:abs(B)).
+
+-spec continued_fraction(fraction()) -> [integer(), ...].
+continued_fraction(F) ->
+    #fraction{numerator = P, denominator = Q} = normalize(F),
+    cf(P, Q, []).
+
+cf(P, Q, Acc) ->
+    A =
+        case P rem Q of
+            R when R < 0 -> (P div Q) - 1;
+            _ -> P div Q
+        end,
+    Rem = P - A * Q,
+    case Rem of
+        0 -> lists:reverse([A | Acc]);
+        _ -> cf(Q, Rem, [A | Acc])
+    end.
+
+-spec from_continued_fraction([integer(), ...]) -> fraction().
+from_continued_fraction([A0]) ->
+    new(A0, 1);
+from_continued_fraction(List) ->
+    [Last | Rest] = lists:reverse(List),
+    lists:foldl(
+        fun(A, Acc) -> add(new(A, 1), reciprocal(Acc)) end,
+        new(Last, 1),
+        Rest
+    ).
+
+-spec convergents(fraction()) -> [fraction(), ...].
+convergents(F) ->
+    conv(continued_fraction(F), 1, 0, 0, 1, []).
+
+conv([], _, _, _, _, Acc) ->
+    lists:reverse(Acc);
+conv([A | Rest], Hm1, Hm2, Km1, Km2, Acc) ->
+    H = A * Hm1 + Hm2,
+    K = A * Km1 + Km2,
+    conv(Rest, H, Hm1, K, Km1, [new(H, K) | Acc]).
+
+-spec rationalize(float(), float()) -> fraction().
+rationalize(X, Eps) ->
+    E = erlang:abs(Eps),
+    {N, D} = simplest_between(X - E, X + E),
+    new(N, D).
+
+simplest_between(Lo, Hi) when Lo =< 0.0, Hi >= 0.0 ->
+    {0, 1};
+simplest_between(Lo, Hi) when Hi < 0.0 ->
+    {N, D} = simplest_positive(-Hi, -Lo),
+    {-N, D};
+simplest_between(Lo, Hi) ->
+    simplest_positive(Lo, Hi).
+
+simplest_positive(Lo, Hi) ->
+    Fl = erlang:floor(Lo),
+    sp_branch(Lo, Hi, Fl).
+
+sp_branch(Lo, _Hi, Fl) when Fl >= Lo ->
+    {Fl, 1};
+sp_branch(Lo, Hi, Fl) ->
+    case erlang:floor(Hi) of
+        Fl ->
+            {A, B} = simplest_positive(1.0 / (Hi - Fl), 1.0 / (Lo - Fl)),
+            {Fl * A + B, A};
+        _ ->
+            {Fl + 1, 1}
     end.
 
 -spec to_float(fraction()) -> float().

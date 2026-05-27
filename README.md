@@ -142,8 +142,22 @@ Parse fractions from text and format them as binaries:
 {fraction,5,1}
 ```
 
+Continued fractions, convergents, and best rational approximation:
+
+``` erlang
+37> rationals:continued_fraction(rationals:new(7, 3)).
+[2,3]
+38> rationals:convergents(rationals:new(7, 3)).
+[{fraction,2,1},{fraction,7,3}]
+39> rationals:rationalize(3.14159, 0.001).
+{fraction,22,7}
+40> rationals:mediant(rationals:new(1, 2), rationals:new(1, 3)).
+{fraction,2,5}
+```
+
 Also available: `min/2`, `max/2`, `clamp/3`, `between/3`, `dist/2`,
-`is_zero/1`, `is_positive/1`, `is_negative/1`.
+`is_zero/1`, `is_positive/1`, `is_negative/1`, `is_reduced/1`,
+`is_unit_fraction/1`, `lcm/2`, `from_continued_fraction/1`.
 
 ``` erlang
 23> rationals:gcd(64, 72).
@@ -176,7 +190,7 @@ Copyright © 2014 Peter Morgan <peter.james.morgan@gmail.com>
 [logo-large]: priv/images/logo-large.png
 [gh-actions-badge]: https://github.com/erlsci/rationals/workflows/ci/badge.svg
 [gh-actions]: https://github.com/erlsci/rationals/actions
-[erlang-badge]: https://img.shields.io/badge/erlang-19%20to%2023-blue.svg
+[erlang-badge]: https://img.shields.io/badge/erlang-20+-blue.svg
 [versions]: https://github.com/erlsci/rationals/blob/master/.github/workflows/ci.yml
 [coverage-badge]: https://img.shields.io/badge/coverage-100%25-brightgreen
 [tag]: https://github.com/erlsci/rationals/tags

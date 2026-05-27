@@ -39,7 +39,14 @@
     prop_parse_format_round_trip/0,
     prop_from_integer_is_integer/0,
     prop_parse_integer_string/0,
-    prop_parse_zero_denominator/0
+    prop_parse_zero_denominator/0,
+    prop_cf_round_trip/0,
+    prop_last_convergent_is_value/0,
+    prop_mediant_between/0,
+    prop_is_reduced_after_reduce/0,
+    prop_lcm_divisible/0,
+    prop_is_unit_fraction_basic/0,
+    prop_rationalize_within_tolerance/0
 ]).
 
 %%% Generators
@@ -447,4 +454,67 @@ prop_parse_zero_denominator() ->
         N,
         integer(),
         rationals:parse(integer_to_list(N) ++ "/0") =:= {error, zero_denominator}
+    ).
+
+%%% Phase 4 properties
+
+prop_cf_round_trip() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(rationals:from_continued_fraction(rationals:continued_fraction(F)), F)
+    ).
+
+prop_last_convergent_is_value() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(lists:last(rationals:convergents(F)), F)
+    ).
+
+prop_mediant_between() ->
+    ?FORALL(
+        {A, B},
+        {fraction(), fraction()},
+        begin
+            Lo = rationals:min(A, B),
+            Hi = rationals:max(A, B),
+            M = rationals:mediant(A, B),
+            rationals:lte(Lo, M) andalso rationals:lte(M, Hi)
+        end
+    ).
+
+prop_is_reduced_after_reduce() ->
+    ?FORALL(
+        F,
+        fraction(),
+        rationals:is_reduced(rationals:reduce(F))
+    ).
+
+prop_lcm_divisible() ->
+    ?FORALL(
+        {A, B},
+        {non_zero_integer(), non_zero_integer()},
+        begin
+            L = rationals:lcm(A, B),
+            L >= 0 andalso L rem A =:= 0 andalso L rem B =:= 0
+        end
+    ).
+
+prop_is_unit_fraction_basic() ->
+    ?FORALL(
+        P,
+        pos_integer(),
+        rationals:is_unit_fraction(rationals:new(1, P))
+    ).
+
+prop_rationalize_within_tolerance() ->
+    ?FORALL(
+        {X, K},
+        {float(-100.0, 100.0), range(1, 1000)},
+        begin
+            Eps = 1.0 / K,
+            R = rationals:rationalize(X, Eps),
+            erlang:abs(rationals:to_float(R) - X) =< Eps + 1.0e-9
+        end
     ).

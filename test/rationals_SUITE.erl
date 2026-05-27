@@ -66,7 +66,15 @@
     parse_error_test/1,
     format_test/1,
     from_integer_test/1,
-    round_trip_test/1
+    round_trip_test/1,
+    mediant_test/1,
+    is_reduced_test/1,
+    is_unit_fraction_test/1,
+    lcm_test/1,
+    continued_fraction_test/1,
+    from_continued_fraction_test/1,
+    convergents_test/1,
+    rationalize_test/1
 ]).
 
 all() ->
@@ -433,3 +441,61 @@ from_integer_test(_Config) ->
 round_trip_test(_Config) ->
     {ok, G} = rationals:parse(rationals:format(rationals:new(7, 12))),
     eq = rationals:compare(G, rationals:new(7, 12)).
+
+mediant_test(_Config) ->
+    {2, 5} = rationals:ratio(rationals:mediant(rationals:new(1, 2), rationals:new(1, 3))),
+    eq = rationals:compare(
+        rationals:mediant(rationals:new(2, 4), rationals:new(1, 3)),
+        rationals:new(2, 5)
+    ),
+    M = rationals:mediant(rationals:new(1, 3), rationals:new(1, 2)),
+    lt = rationals:compare(rationals:new(1, 3), M),
+    lt = rationals:compare(M, rationals:new(1, 2)).
+
+is_reduced_test(_Config) ->
+    true = rationals:is_reduced(rationals:new(1, 2)),
+    true = rationals:is_reduced(rationals:new(1, -2)),
+    true = rationals:is_reduced(rationals:new(0, 1)),
+    false = rationals:is_reduced(rationals:new(2, 4)),
+    false = rationals:is_reduced(rationals:new(0, 5)).
+
+is_unit_fraction_test(_Config) ->
+    true = rationals:is_unit_fraction(rationals:new(1, 3)),
+    true = rationals:is_unit_fraction(rationals:new(2, 6)),
+    false = rationals:is_unit_fraction(rationals:new(2, 3)),
+    false = rationals:is_unit_fraction(rationals:new(-1, 2)),
+    false = rationals:is_unit_fraction(rationals:zero()).
+
+lcm_test(_Config) ->
+    12 = rationals:lcm(4, 6),
+    12 = rationals:lcm(-4, 6),
+    0 = rationals:lcm(0, 5),
+    0 = rationals:lcm(7, 0),
+    7 = rationals:lcm(7, 1).
+
+continued_fraction_test(_Config) ->
+    [2, 3] = rationals:continued_fraction(rationals:new(7, 3)),
+    [0, 2] = rationals:continued_fraction(rationals:new(1, 2)),
+    [3] = rationals:continued_fraction(rationals:new(3, 1)),
+    [-3, 1, 2] = rationals:continued_fraction(rationals:new(-7, 3)).
+
+from_continued_fraction_test(_Config) ->
+    eq = rationals:compare(rationals:from_continued_fraction([2, 3]), rationals:new(7, 3)),
+    eq = rationals:compare(rationals:from_continued_fraction([3]), rationals:new(3, 1)),
+    eq = rationals:compare(rationals:from_continued_fraction([-3, 1, 2]), rationals:new(-7, 3)).
+
+convergents_test(_Config) ->
+    C1 = rationals:convergents(rationals:new(7, 3)),
+    2 = length(C1),
+    eq = rationals:compare(lists:last(C1), rationals:new(7, 3)),
+    eq = rationals:compare(hd(C1), rationals:new(2, 1)),
+    C2 = rationals:convergents(rationals:new(3, 1)),
+    1 = length(C2),
+    eq = rationals:compare(hd(C2), rationals:new(3, 1)).
+
+rationalize_test(_Config) ->
+    {1, 2} = rationals:ratio(rationals:rationalize(0.5, 0.01)),
+    {1, 3} = rationals:ratio(rationals:rationalize(0.333333, 0.001)),
+    {2, 1} = rationals:ratio(rationals:rationalize(2.5, 0.5)),
+    {0, 1} = rationals:ratio(rationals:rationalize(0.0, 0.5)),
+    {-1, 2} = rationals:ratio(rationals:rationalize(-0.5, 0.01)).
