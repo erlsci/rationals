@@ -15,7 +15,7 @@
 
 {application, rationals, [
     {description, "Rational numbers in Erlang"},
-    {vsn, "0.2.0"},
+    {vsn, "0.3.0"},
     {modules, []},
     {registered, []},
     {applications, [kernel, stdlib]},
