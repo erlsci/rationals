@@ -155,6 +155,24 @@ Continued fractions, convergents, and best rational approximation:
 {fraction,2,5}
 ```
 
+Exact decimal expansion (non-repeating + repeating block):
+
+``` erlang
+41> rationals:decimal_expansion(rationals:new(1, 6)).
+{<<"0.1">>,<<"6">>}
+42> rationals:decimal_expansion(rationals:new(2, 7)).
+{<<"0.">>,<<"285714">>}
+```
+
+Egyptian fraction decomposition and Farey sequences:
+
+``` erlang
+43> rationals:egyptian(rationals:new(2, 3)).
+[{fraction,1,2},{fraction,1,6}]
+44> rationals:farey(3).
+[{fraction,0,1},{fraction,1,3},{fraction,1,2},{fraction,2,3},{fraction,1,1}]
+```
+
 Also available: `min/2`, `max/2`, `clamp/3`, `between/3`, `dist/2`,
 `is_zero/1`, `is_positive/1`, `is_negative/1`, `is_reduced/1`,
 `is_unit_fraction/1`, `lcm/2`, `from_continued_fraction/1`.

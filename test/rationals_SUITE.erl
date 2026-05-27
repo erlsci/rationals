@@ -74,7 +74,10 @@
     continued_fraction_test/1,
     from_continued_fraction_test/1,
     convergents_test/1,
-    rationalize_test/1
+    rationalize_test/1,
+    decimal_expansion_test/1,
+    egyptian_test/1,
+    farey_test/1
 ]).
 
 all() ->
@@ -499,3 +502,33 @@ rationalize_test(_Config) ->
     {2, 1} = rationals:ratio(rationals:rationalize(2.5, 0.5)),
     {0, 1} = rationals:ratio(rationals:rationalize(0.0, 0.5)),
     {-1, 2} = rationals:ratio(rationals:rationalize(-0.5, 0.01)).
+
+decimal_expansion_test(_Config) ->
+    {<<"0.25">>, <<>>} = rationals:decimal_expansion(rationals:new(1, 4)),
+    {<<"0.5">>, <<>>} = rationals:decimal_expansion(rationals:new(1, 2)),
+    {<<"0.">>, <<"3">>} = rationals:decimal_expansion(rationals:new(1, 3)),
+    {<<"0.1">>, <<"6">>} = rationals:decimal_expansion(rationals:new(1, 6)),
+    {<<"0.">>, <<"285714">>} = rationals:decimal_expansion(rationals:new(2, 7)),
+    {<<"2.">>, <<"3">>} = rationals:decimal_expansion(rationals:new(7, 3)),
+    {<<"3">>, <<>>} = rationals:decimal_expansion(rationals:new(3, 1)),
+    {<<"-0.">>, <<"3">>} = rationals:decimal_expansion(rationals:new(-1, 3)),
+    {<<"0">>, <<>>} = rationals:decimal_expansion(rationals:zero()).
+
+egyptian_test(_Config) ->
+    E1 = rationals:egyptian(rationals:new(2, 3)),
+    2 = length(E1),
+    eq = rationals:compare(hd(E1), rationals:new(1, 2)),
+    eq = rationals:compare(lists:last(E1), rationals:new(1, 6)),
+    E2 = rationals:egyptian(rationals:new(3, 4)),
+    2 = length(E2),
+    eq = rationals:compare(hd(E2), rationals:new(1, 2)),
+    eq = rationals:compare(lists:last(E2), rationals:new(1, 4)),
+    [] = rationals:egyptian(rationals:zero()).
+
+farey_test(_Config) ->
+    F1 = rationals:farey(1),
+    [{0, 1}, {1, 1}] = [rationals:ratio(X) || X <- F1],
+    F2 = rationals:farey(2),
+    [{0, 1}, {1, 2}, {1, 1}] = [rationals:ratio(X) || X <- F2],
+    F3 = rationals:farey(3),
+    [{0, 1}, {1, 3}, {1, 2}, {2, 3}, {1, 1}] = [rationals:ratio(X) || X <- F3].

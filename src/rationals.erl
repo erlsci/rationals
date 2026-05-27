@@ -70,6 +70,9 @@
     from_continued_fraction/1,
     convergents/1,
     rationalize/2,
+    decimal_expansion/1,
+    egyptian/1,
+    farey/1,
     from_float/1,
     to_float/1,
     gcd/2,
@@ -459,6 +462,64 @@ sp_branch(Lo, Hi, Fl) ->
             {Fl * A + B, A};
         _ ->
             {Fl + 1, 1}
+    end.
+
+-spec decimal_expansion(fraction()) -> {binary(), binary()}.
+decimal_expansion(F) ->
+    #fraction{numerator = P0, denominator = Q} = normalize(F),
+    Sign =
+        case P0 < 0 of
+            true -> "-";
+            false -> ""
+        end,
+    P = erlang:abs(P0),
+    IntPart = P div Q,
+    case P rem Q of
+        0 ->
+            {list_to_binary(Sign ++ integer_to_list(IntPart)), <<>>};
+        R0 ->
+            {NonRep, Rep} = long_div(R0, Q, [], #{}),
+            Head = Sign ++ integer_to_list(IntPart) ++ "." ++ NonRep,
+            {list_to_binary(Head), list_to_binary(Rep)}
+    end.
+
+long_div(0, _Q, RevDigits, _Seen) ->
+    {lists:reverse(RevDigits), []};
+long_div(R, Q, RevDigits, Seen) ->
+    case maps:find(R, Seen) of
+        {ok, J} ->
+            {NonRep, Rep} = lists:split(J, lists:reverse(RevDigits)),
+            {NonRep, Rep};
+        error ->
+            Pos = length(RevDigits),
+            Digit = (R * 10) div Q + $0,
+            R2 = (R * 10) rem Q,
+            long_div(R2, Q, [Digit | RevDigits], maps:put(R, Pos, Seen))
+    end.
+
+-spec egyptian(fraction()) -> [fraction()].
+egyptian(F) ->
+    #fraction{numerator = P, denominator = Q} = reduce(F),
+    egyptian_greedy(P, Q).
+
+egyptian_greedy(0, _Q) ->
+    [];
+egyptian_greedy(P, Q) when P > 0 ->
+    A = (Q + P - 1) div P,
+    [new(1, A) | egyptian_greedy(P * A - Q, Q * A)].
+
+-spec farey(pos_integer()) -> [fraction(), ...].
+farey(N) ->
+    farey_next(0, 1, 1, N, N, [new(0, 1)]).
+
+farey_next(A, B, C, D, N, Acc) ->
+    Acc1 = [new(C, D) | Acc],
+    case C =:= 1 andalso D =:= 1 of
+        true ->
+            lists:reverse(Acc1);
+        false ->
+            K = (N + B) div D,
+            farey_next(C, D, K * C - A, K * D - B, N, Acc1)
     end.
 
 -spec to_float(fraction()) -> float().

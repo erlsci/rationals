@@ -46,7 +46,13 @@
     prop_is_reduced_after_reduce/0,
     prop_lcm_divisible/0,
     prop_is_unit_fraction_basic/0,
-    prop_rationalize_within_tolerance/0
+    prop_rationalize_within_tolerance/0,
+    prop_egyptian_reconstructs/0,
+    prop_egyptian_all_units/0,
+    prop_egyptian_distinct/0,
+    prop_farey_endpoints/0,
+    prop_farey_ascending/0,
+    prop_farey_reduced_bounded/0
 ]).
 
 %%% Generators
@@ -518,3 +524,72 @@ prop_rationalize_within_tolerance() ->
             erlang:abs(rationals:to_float(R) - X) =< Eps + 1.0e-9
         end
     ).
+
+%%% Phase 5 properties
+
+proper_fraction() ->
+    ?LET({A, B}, {pos_integer(), pos_integer()}, rationals:new(A, A + B)).
+
+prop_egyptian_reconstructs() ->
+    ?FORALL(
+        F,
+        proper_fraction(),
+        same_value(rationals:sum(rationals:egyptian(F)), F)
+    ).
+
+prop_egyptian_all_units() ->
+    ?FORALL(
+        F,
+        proper_fraction(),
+        lists:all(fun rationals:is_unit_fraction/1, rationals:egyptian(F))
+    ).
+
+prop_egyptian_distinct() ->
+    ?FORALL(
+        F,
+        proper_fraction(),
+        begin
+            Ratios = [rationals:ratio(E) || E <- rationals:egyptian(F)],
+            length(Ratios) =:= length(lists:usort(Ratios))
+        end
+    ).
+
+prop_farey_endpoints() ->
+    ?FORALL(
+        N,
+        range(1, 30),
+        begin
+            Seq = rationals:farey(N),
+            same_value(hd(Seq), rationals:zero()) andalso
+                same_value(lists:last(Seq), rationals:one())
+        end
+    ).
+
+prop_farey_ascending() ->
+    ?FORALL(
+        N,
+        range(1, 30),
+        begin
+            Seq = rationals:farey(N),
+            pairs_ascending(Seq)
+        end
+    ).
+
+prop_farey_reduced_bounded() ->
+    ?FORALL(
+        N,
+        range(1, 30),
+        begin
+            Seq = rationals:farey(N),
+            lists:all(
+                fun(F) ->
+                    rationals:is_reduced(F) andalso
+                        rationals:denominator(F) =< N
+                end,
+                Seq
+            )
+        end
+    ).
+
+pairs_ascending([_]) -> true;
+pairs_ascending([A, B | Rest]) -> rationals:lt(A, B) andalso pairs_ascending([B | Rest]).
