@@ -10,7 +10,32 @@
     prop_compare_antisymmetric/0,
     prop_compare_sign_regression/0,
     prop_zero_identity/0,
-    prop_one_identity/0
+    prop_one_identity/0,
+    prop_negate_additive_inverse/0,
+    prop_negate_involution/0,
+    prop_abs_non_negative/0,
+    prop_abs_idempotent/0,
+    prop_sign_matches_compare/0,
+    prop_sign_trichotomy/0,
+    prop_pow_zero/0,
+    prop_pow_one/0,
+    prop_pow_add/0,
+    prop_min_lower_bound/0,
+    prop_max_upper_bound/0,
+    prop_clamp_in_range/0,
+    prop_dist_symmetric/0,
+    prop_dist_non_negative/0,
+    prop_sum_append/0,
+    prop_product_append/0,
+    prop_floor_le/0,
+    prop_ceil_ge/0,
+    prop_floor_ceil_relation/0,
+    prop_truncate_between/0,
+    prop_round_nearest/0,
+    prop_to_mixed_round_trip/0,
+    prop_to_mixed_proper/0,
+    prop_is_integer_consistent/0,
+    prop_is_proper_consistent/0
 ]).
 
 %%% Generators
@@ -20,6 +45,12 @@ non_zero_integer() ->
 
 fraction() ->
     ?LET({N, D}, {integer(), non_zero_integer()}, rationals:new(N, D)).
+
+fraction_list() ->
+    list(fraction()).
+
+small_non_neg_integer() ->
+    range(0, 10).
 
 %%% Oracles — independent of normalize/compare
 
@@ -126,4 +157,253 @@ prop_one_identity() ->
         F,
         fraction(),
         same_value(rationals:multiply(F, rationals:one()), F)
+    ).
+
+%%% Phase 1 properties
+
+prop_negate_additive_inverse() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(rationals:add(F, rationals:negate(F)), rationals:zero())
+    ).
+
+prop_negate_involution() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(rationals:negate(rationals:negate(F)), F)
+    ).
+
+prop_abs_non_negative() ->
+    ?FORALL(
+        F,
+        fraction(),
+        not rationals:is_negative(rationals:abs(F))
+    ).
+
+prop_abs_idempotent() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(rationals:abs(rationals:abs(F)), rationals:abs(F))
+    ).
+
+prop_sign_matches_compare() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            S = rationals:sign(F),
+            C = rationals:compare(F, rationals:zero()),
+            case C of
+                gt -> S =:= 1;
+                lt -> S =:= -1;
+                eq -> S =:= 0
+            end
+        end
+    ).
+
+prop_sign_trichotomy() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            Z = rationals:is_zero(F),
+            P = rationals:is_positive(F),
+            N = rationals:is_negative(F),
+            [true] =:= [X || X <- [Z, P, N], X]
+        end
+    ).
+
+prop_pow_zero() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(rationals:pow(F, 0), rationals:one())
+    ).
+
+prop_pow_one() ->
+    ?FORALL(
+        F,
+        fraction(),
+        same_value(rationals:pow(F, 1), F)
+    ).
+
+prop_pow_add() ->
+    ?FORALL(
+        {F, A, B},
+        {fraction(), small_non_neg_integer(), small_non_neg_integer()},
+        same_value(
+            rationals:pow(F, A + B),
+            rationals:multiply(rationals:pow(F, A), rationals:pow(F, B))
+        )
+    ).
+
+prop_min_lower_bound() ->
+    ?FORALL(
+        {F1, F2},
+        {fraction(), fraction()},
+        begin
+            M = rationals:min(F1, F2),
+            rationals:lte(M, F1) andalso
+                rationals:lte(M, F2) andalso
+                (same_value(M, F1) orelse same_value(M, F2))
+        end
+    ).
+
+prop_max_upper_bound() ->
+    ?FORALL(
+        {F1, F2},
+        {fraction(), fraction()},
+        begin
+            M = rationals:max(F1, F2),
+            rationals:gte(M, F1) andalso
+                rationals:gte(M, F2) andalso
+                (same_value(M, F1) orelse same_value(M, F2))
+        end
+    ).
+
+prop_clamp_in_range() ->
+    ?FORALL(
+        {F, X, Y},
+        {fraction(), fraction(), fraction()},
+        begin
+            Lo = rationals:min(X, Y),
+            Hi = rationals:max(X, Y),
+            rationals:between(rationals:clamp(F, Lo, Hi), Lo, Hi)
+        end
+    ).
+
+prop_dist_symmetric() ->
+    ?FORALL(
+        {A, B},
+        {fraction(), fraction()},
+        same_value(rationals:dist(A, B), rationals:dist(B, A))
+    ).
+
+prop_dist_non_negative() ->
+    ?FORALL(
+        {A, B},
+        {fraction(), fraction()},
+        not rationals:is_negative(rationals:dist(A, B))
+    ).
+
+prop_sum_append() ->
+    ?FORALL(
+        {L1, L2},
+        {fraction_list(), fraction_list()},
+        same_value(
+            rationals:sum(L1 ++ L2),
+            rationals:add(rationals:sum(L1), rationals:sum(L2))
+        )
+    ).
+
+prop_product_append() ->
+    ?FORALL(
+        {L1, L2},
+        {fraction_list(), fraction_list()},
+        same_value(
+            rationals:product(L1 ++ L2),
+            rationals:multiply(rationals:product(L1), rationals:product(L2))
+        )
+    ).
+
+%%% Phase 2 properties
+
+prop_floor_le() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            Fl = rationals:floor(F),
+            rationals:compare(rationals:new(Fl, 1), F) =/= gt andalso
+                rationals:compare(F, rationals:new(Fl + 1, 1)) =:= lt
+        end
+    ).
+
+prop_ceil_ge() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            C = rationals:ceil(F),
+            rationals:compare(rationals:new(C, 1), F) =/= lt andalso
+                rationals:compare(F, rationals:new(C - 1, 1)) =:= gt
+        end
+    ).
+
+prop_floor_ceil_relation() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            Diff = rationals:ceil(F) - rationals:floor(F),
+            case rationals:is_integer(F) of
+                true -> Diff =:= 0;
+                false -> Diff =:= 1
+            end
+        end
+    ).
+
+prop_truncate_between() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            T = rationals:truncate(F),
+            Fl = rationals:floor(F),
+            C = rationals:ceil(F),
+            T >= erlang:min(Fl, C) andalso T =< erlang:max(Fl, C) andalso
+                case rationals:compare(F, rationals:zero()) of
+                    lt -> T =:= C;
+                    _ -> T =:= Fl
+                end
+        end
+    ).
+
+prop_round_nearest() ->
+    ?FORALL(
+        F,
+        fraction(),
+        rationals:compare(
+            rationals:dist(F, rationals:new(rationals:round(F), 1)),
+            rationals:new(1, 2)
+        ) =/= gt
+    ).
+
+prop_to_mixed_round_trip() ->
+    ?FORALL(
+        F,
+        fraction(),
+        begin
+            {W, Frac} = rationals:to_mixed(F),
+            same_value(
+                rationals:from_mixed(W, rationals:numerator(Frac), rationals:denominator(Frac)),
+                F
+            )
+        end
+    ).
+
+prop_to_mixed_proper() ->
+    ?FORALL(
+        F,
+        fraction(),
+        rationals:is_proper(element(2, rationals:to_mixed(F)))
+    ).
+
+prop_is_integer_consistent() ->
+    ?FORALL(
+        F,
+        fraction(),
+        rationals:is_integer(F) =:=
+            (rationals:compare(F, rationals:new(rationals:truncate(F), 1)) =:= eq)
+    ).
+
+prop_is_proper_consistent() ->
+    ?FORALL(
+        F,
+        fraction(),
+        rationals:is_proper(F) =:=
+            (rationals:compare(rationals:abs(F), rationals:one()) =:= lt)
     ).

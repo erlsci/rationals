@@ -14,6 +14,8 @@
 
 -module(rationals).
 
+-compile({no_auto_import, [abs/1, min/2, max/2, floor/1, ceil/1, round/1, is_integer/1]}).
+
 -export([
     new/1,
     new/2,
@@ -35,6 +37,28 @@
     lte/2,
     zero/0,
     one/0,
+    negate/1,
+    abs/1,
+    sign/1,
+    is_zero/1,
+    is_positive/1,
+    is_negative/1,
+    min/2,
+    max/2,
+    clamp/3,
+    between/3,
+    dist/2,
+    pow/2,
+    sum/1,
+    product/1,
+    truncate/1,
+    floor/1,
+    ceil/1,
+    round/1,
+    to_mixed/1,
+    from_mixed/3,
+    is_integer/1,
+    is_proper/1,
     from_float/1,
     to_float/1,
     gcd/2,
@@ -90,6 +114,8 @@ numerator(#fraction{numerator = Numerator}) ->
 denominator(#fraction{denominator = Denominator}) ->
     Denominator.
 
+%% Canonical-form guarantee: the second element is pos_integer() after
+%% normalize/reduce. A lazily-built fraction may yield a negative denominator.
 -spec ratio(fraction()) -> ratio().
 ratio(#fraction{numerator = Numerator, denominator = Denominator}) ->
     {Numerator, Denominator}.
@@ -170,6 +196,130 @@ zero() -> new(0, 1).
 
 -spec one() -> fraction().
 one() -> new(1, 1).
+
+-spec negate(fraction()) -> fraction().
+negate(#fraction{numerator = N, denominator = D}) ->
+    new(-N, D).
+
+-spec abs(fraction()) -> fraction().
+abs(#fraction{numerator = N, denominator = D}) ->
+    new(erlang:abs(N), erlang:abs(D)).
+
+-spec sign(fraction()) -> -1 | 0 | 1.
+sign(F) ->
+    case numerator(normalize(F)) of
+        0 -> 0;
+        N when N < 0 -> -1;
+        _ -> 1
+    end.
+
+-spec is_zero(fraction()) -> boolean().
+is_zero(F) -> numerator(F) =:= 0.
+
+-spec is_positive(fraction()) -> boolean().
+is_positive(F) -> sign(F) =:= 1.
+
+-spec is_negative(fraction()) -> boolean().
+is_negative(F) -> sign(F) =:= -1.
+
+-spec min(fraction(), fraction()) -> fraction().
+min(F1, F2) ->
+    case compare(F1, F2) of
+        gt -> F2;
+        _ -> F1
+    end.
+
+-spec max(fraction(), fraction()) -> fraction().
+max(F1, F2) ->
+    case compare(F1, F2) of
+        lt -> F2;
+        _ -> F1
+    end.
+
+-spec clamp(fraction(), fraction(), fraction()) -> fraction().
+clamp(F, Lo, Hi) ->
+    max(Lo, min(F, Hi)).
+
+-spec between(fraction(), fraction(), fraction()) -> boolean().
+between(F, Lo, Hi) ->
+    gte(F, Lo) andalso lte(F, Hi).
+
+-spec dist(fraction(), fraction()) -> fraction().
+dist(F1, F2) ->
+    abs(subtract(F1, F2)).
+
+%% 0^0 = 1 by convention. pow(zero(), N) for N < 0 produces a
+%% zero-denominator fraction (out of contract, like reciprocal of zero).
+-spec pow(fraction(), integer()) -> fraction().
+pow(_F, 0) -> one();
+pow(F, N) when N > 0 -> pow_pos(F, N, one());
+pow(F, N) when N < 0 -> reciprocal(pow_pos(F, -N, one())).
+
+pow_pos(_F, 0, Acc) ->
+    Acc;
+pow_pos(F, N, Acc) ->
+    Acc1 =
+        case N rem 2 of
+            1 -> multiply(Acc, F);
+            0 -> Acc
+        end,
+    pow_pos(multiply(F, F), N div 2, Acc1).
+
+-spec sum([fraction()]) -> fraction().
+sum(Fs) -> lists:foldl(fun add/2, zero(), Fs).
+
+-spec product([fraction()]) -> fraction().
+product(Fs) -> lists:foldl(fun multiply/2, one(), Fs).
+
+-spec truncate(fraction()) -> integer().
+truncate(F) ->
+    #fraction{numerator = N, denominator = D} = normalize(F),
+    N div D.
+
+-spec floor(fraction()) -> integer().
+floor(F) ->
+    #fraction{numerator = N, denominator = D} = normalize(F),
+    case N rem D of
+        R when R < 0 -> (N div D) - 1;
+        _ -> N div D
+    end.
+
+-spec ceil(fraction()) -> integer().
+ceil(F) ->
+    #fraction{numerator = N, denominator = D} = normalize(F),
+    case N rem D of
+        R when R > 0 -> (N div D) + 1;
+        _ -> N div D
+    end.
+
+%% Rounds half away from zero (matches erlang:round/1 convention).
+-spec round(fraction()) -> integer().
+round(F) ->
+    #fraction{numerator = N, denominator = D} = normalize(F),
+    Mag = (2 * erlang:abs(N) + D) div (2 * D),
+    case N < 0 of
+        true -> -Mag;
+        false -> Mag
+    end.
+
+%% Whole part (toward zero) + signed proper fractional remainder.
+-spec to_mixed(fraction()) -> {integer(), fraction()}.
+to_mixed(F) ->
+    #fraction{numerator = N, denominator = D} = normalize(F),
+    {N div D, new(N rem D, D)}.
+
+-spec from_mixed(integer(), numerator(), denominator()) -> fraction().
+from_mixed(Whole, N, D) ->
+    new(Whole * D + N, D).
+
+-spec is_integer(fraction()) -> boolean().
+is_integer(F) ->
+    denominator(normalize(F)) =:= 1.
+
+-spec is_proper(fraction()) -> boolean().
+is_proper(F) ->
+    #fraction{numerator = N, denominator = D} = normalize(F),
+    erlang:abs(N) < D.
 
 -spec to_float(fraction()) -> float().
 to_float(#fraction{

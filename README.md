@@ -72,8 +72,62 @@ true
 true
 ```
 
+Negate, absolute value, and sign:
+
 ``` erlang
-15> rationals:gcd(64, 72).
+15> rationals:negate(Quarter).
+{fraction,-1,4}
+16> rationals:abs(rationals:new(-3, 4)).
+{fraction,3,4}
+17> rationals:sign(rationals:new(-3, 4)).
+-1
+```
+
+Integer exponentiation, sum, and product:
+
+``` erlang
+18> rationals:pow(rationals:new(2, 3), 3).
+{fraction,8,27}
+19> rationals:pow(rationals:new(2, 3), -1).
+{fraction,3,2}
+20> rationals:sum([rationals:new(1, 2), rationals:new(1, 3), rationals:new(1, 6)]).
+{fraction,6,6}
+21> rationals:reduce(rationals:sum([rationals:new(1, 2), rationals:new(1, 3), rationals:new(1, 6)])).
+{fraction,1,1}
+22> rationals:product([rationals:new(2, 3), rationals:new(3, 4)]).
+{fraction,6,12}
+```
+
+Rounding and integer conversion — `floor/1` rounds toward −∞, `ceil/1` toward
++∞, `truncate/1` toward zero, and `round/1` rounds half away from zero:
+
+``` erlang
+23> rationals:floor(rationals:new(-7, 2)).
+-4
+24> rationals:ceil(rationals:new(-7, 2)).
+-3
+25> rationals:round(rationals:new(5, 2)).
+3
+```
+
+Mixed-number decomposition and predicates:
+
+``` erlang
+26> rationals:to_mixed(rationals:new(7, 3)).
+{2,{fraction,1,3}}
+27> rationals:from_mixed(2, 1, 3).
+{fraction,7,3}
+28> rationals:is_integer(rationals:new(6, 3)).
+true
+29> rationals:is_proper(rationals:new(3, 4)).
+true
+```
+
+Also available: `min/2`, `max/2`, `clamp/3`, `between/3`, `dist/2`,
+`is_zero/1`, `is_positive/1`, `is_negative/1`.
+
+``` erlang
+23> rationals:gcd(64, 72).
 8
 ```
 

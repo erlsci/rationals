@@ -44,7 +44,24 @@
     reduce_canonical_sign_test/1,
     compare_sign_robust_test/1,
     constants_test/1,
-    denominator_contract_boundary_test/1
+    denominator_contract_boundary_test/1,
+    negate_test/1,
+    abs_test/1,
+    sign_test/1,
+    predicates_test/1,
+    min_max_test/1,
+    clamp_between_test/1,
+    dist_test/1,
+    pow_test/1,
+    sum_product_test/1,
+    floor_test/1,
+    ceil_test/1,
+    truncate_test/1,
+    round_test/1,
+    to_mixed_test/1,
+    from_mixed_test/1,
+    is_integer_test/1,
+    is_proper_test/1
 ]).
 
 all() ->
@@ -236,3 +253,144 @@ denominator_contract_boundary_test(_Config) ->
     Normalized = rationals:normalize(Lazy),
     {1, -2} = rationals:ratio(Lazy),
     {-1, 2} = rationals:ratio(Normalized).
+
+negate_test(_Config) ->
+    {-3, 4} = rationals:ratio(rationals:negate(rationals:new(3, 4))),
+    {3, 4} = rationals:ratio(rationals:negate(rationals:new(-3, 4))).
+
+abs_test(_Config) ->
+    eq = rationals:compare(rationals:abs(rationals:new(-3, 4)), rationals:new(3, 4)),
+    eq = rationals:compare(rationals:abs(rationals:new(3, -4)), rationals:new(3, 4)),
+    true = rationals:is_zero(rationals:abs(rationals:zero())).
+
+sign_test(_Config) ->
+    Neg = -1,
+    1 = rationals:sign(rationals:new(3, 4)),
+    Neg = rationals:sign(rationals:new(-3, 4)),
+    0 = rationals:sign(rationals:zero()),
+    Neg = rationals:sign(rationals:new(3, -4)),
+    1 = rationals:sign(rationals:new(-3, -4)).
+
+predicates_test(_Config) ->
+    true = rationals:is_zero(rationals:zero()),
+    false = rationals:is_zero(rationals:one()),
+    true = rationals:is_positive(rationals:new(3, 4)),
+    false = rationals:is_positive(rationals:zero()),
+    true = rationals:is_negative(rationals:new(-3, 4)),
+    true = rationals:is_negative(rationals:new(1, -2)),
+    false = rationals:is_negative(rationals:zero()).
+
+min_max_test(_Config) ->
+    Half = rationals:new(1, 2),
+    ThreeQuarters = rationals:new(3, 4),
+    eq = rationals:compare(rationals:min(Half, ThreeQuarters), Half),
+    eq = rationals:compare(rationals:max(Half, ThreeQuarters), ThreeQuarters),
+    eq = rationals:compare(rationals:min(Half, Half), Half),
+    eq = rationals:compare(rationals:max(Half, Half), Half).
+
+clamp_between_test(_Config) ->
+    Lo = rationals:zero(),
+    Hi = rationals:new(3, 1),
+    Below = rationals:new(-1, 1),
+    Within = rationals:new(1, 1),
+    Above = rationals:new(5, 1),
+    eq = rationals:compare(rationals:clamp(Below, Lo, Hi), Lo),
+    eq = rationals:compare(rationals:clamp(Within, Lo, Hi), Within),
+    eq = rationals:compare(rationals:clamp(Above, Lo, Hi), Hi),
+    true = rationals:between(Lo, Lo, Hi),
+    true = rationals:between(Hi, Lo, Hi),
+    true = rationals:between(Within, Lo, Hi),
+    false = rationals:between(Below, Lo, Hi),
+    false = rationals:between(Above, Lo, Hi).
+
+dist_test(_Config) ->
+    eq = rationals:compare(
+        rationals:dist(rationals:new(1, 2), rationals:new(3, 4)),
+        rationals:new(1, 4)
+    ),
+    eq = rationals:compare(
+        rationals:dist(rationals:new(3, 4), rationals:new(1, 2)),
+        rationals:new(1, 4)
+    ).
+
+pow_test(_Config) ->
+    F = rationals:new(2, 3),
+    {1, 1} = rationals:ratio(rationals:pow(F, 0)),
+    eq = rationals:compare(rationals:pow(F, 1), F),
+    eq = rationals:compare(rationals:pow(F, 2), rationals:new(4, 9)),
+    eq = rationals:compare(rationals:pow(F, -1), rationals:new(3, 2)),
+    eq = rationals:compare(rationals:pow(F, -2), rationals:new(9, 4)),
+    {1, 1} = rationals:ratio(rationals:pow(rationals:zero(), 0)).
+
+sum_product_test(_Config) ->
+    Half = rationals:new(1, 2),
+    Third = rationals:new(1, 3),
+    Sixth = rationals:new(1, 6),
+    eq = rationals:compare(rationals:sum([Half, Third, Sixth]), rationals:one()),
+    {0, 1} = rationals:ratio(rationals:sum([])),
+    TwoThirds = rationals:new(2, 3),
+    ThreeQuarters = rationals:new(3, 4),
+    eq = rationals:compare(rationals:product([TwoThirds, ThreeQuarters]), Half),
+    {1, 1} = rationals:ratio(rationals:product([])).
+
+floor_test(_Config) ->
+    3 = rationals:floor(rationals:new(7, 2)),
+    Neg4 = -4,
+    Neg4 = rationals:floor(rationals:new(-7, 2)),
+    2 = rationals:floor(rationals:new(6, 3)),
+    0 = rationals:floor(rationals:new(3, 4)),
+    Neg1 = -1,
+    Neg1 = rationals:floor(rationals:new(-3, 4)).
+
+ceil_test(_Config) ->
+    4 = rationals:ceil(rationals:new(7, 2)),
+    Neg3 = -3,
+    Neg3 = rationals:ceil(rationals:new(-7, 2)),
+    2 = rationals:ceil(rationals:new(6, 3)),
+    1 = rationals:ceil(rationals:new(3, 4)),
+    0 = rationals:ceil(rationals:new(-3, 4)).
+
+truncate_test(_Config) ->
+    3 = rationals:truncate(rationals:new(7, 2)),
+    Neg3 = -3,
+    Neg3 = rationals:truncate(rationals:new(-7, 2)),
+    0 = rationals:truncate(rationals:new(-3, 4)).
+
+round_test(_Config) ->
+    Neg1 = -1,
+    1 = rationals:round(rationals:new(1, 2)),
+    Neg1 = rationals:round(rationals:new(-1, 2)),
+    2 = rationals:round(rationals:new(3, 2)),
+    3 = rationals:round(rationals:new(5, 2)),
+    1 = rationals:round(rationals:new(2, 3)),
+    0 = rationals:round(rationals:new(1, 3)),
+    Neg1 = rationals:round(rationals:new(-2, 3)).
+
+to_mixed_test(_Config) ->
+    {2, Frac1} = rationals:to_mixed(rationals:new(7, 3)),
+    eq = rationals:compare(Frac1, rationals:new(1, 3)),
+    {Neg2, Frac2} = rationals:to_mixed(rationals:new(-7, 3)),
+    Neg2 = -2,
+    eq = rationals:compare(Frac2, rationals:new(-1, 3)),
+    {2, Frac3} = rationals:to_mixed(rationals:new(6, 3)),
+    true = rationals:is_zero(Frac3),
+    {1, Frac4} = rationals:to_mixed(rationals:new(8, 6)),
+    eq = rationals:compare(Frac4, rationals:new(1, 3)).
+
+from_mixed_test(_Config) ->
+    eq = rationals:compare(rationals:from_mixed(2, 1, 3), rationals:new(7, 3)),
+    eq = rationals:compare(rationals:from_mixed(-2, -1, 3), rationals:new(-7, 3)).
+
+is_integer_test(_Config) ->
+    true = rationals:is_integer(rationals:new(4, 2)),
+    false = rationals:is_integer(rationals:new(3, 4)),
+    true = rationals:is_integer(rationals:new(0, 5)),
+    true = rationals:is_integer(rationals:new(6, 3)).
+
+is_proper_test(_Config) ->
+    true = rationals:is_proper(rationals:new(3, 4)),
+    false = rationals:is_proper(rationals:new(4, 3)),
+    false = rationals:is_proper(rationals:new(6, 4)),
+    true = rationals:is_proper(rationals:new(-3, 4)),
+    false = rationals:is_proper(rationals:new(5, 5)),
+    true = rationals:is_proper(rationals:new(0, 5)).
